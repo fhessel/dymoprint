@@ -141,16 +141,16 @@ class DymoLabeler:
         response = self.sendCommand()
         print(response)
 
-    def printLabel(self, lines, margin=56 * 2):
+    def printLabel(self, lines, margin=56 * 2, offset_bytes = 0):
         """Print the label described by lines. (Automatically split label if
         larger than maxLines)"""
 
         while len(lines) > self.maxLines + 1:
-            self.rawPrintLabel(lines[0 : self.maxLines], margin=0)
+            self.rawPrintLabel(lines[0 : self.maxLines], margin=0, offset_bytes=offset_bytes)
             del lines[0 : self.maxLines]
-        self.rawPrintLabel(lines, margin=margin)
+        self.rawPrintLabel(lines, margin=margin, offset_bytes=offset_bytes)
 
-    def rawPrintLabel(self, lines, margin=56 * 2):
+    def rawPrintLabel(self, lines, margin=56 * 2, offset_bytes = 0):
         """Print the label described by lines. (HLF)"""
 
         # optimize the matrix for the dymo label printer
@@ -166,7 +166,7 @@ class DymoLabeler:
         self.tapeColor(0)
         self.dotTab(dottab)
         for line in lines:
-            self.line(line)
+            self.line((offset_bytes*[0]) + line)
         if margin > 0:
             self.skipLines(margin)
         self.statusRequest()

@@ -101,7 +101,7 @@ def parse_args():
     )
     parser.add_argument("-p", "--picture", help="Print the specified picture")
     parser.add_argument("-m", type=int, help="Override margin (default is 56*2)")
-    # parser.add_argument('-t',type=int,choices=[6, 9, 12],default=12,help='Tape size: 6,9,12 mm, default=12mm')
+    parser.add_argument('-t', type=int, choices=[6, 9, 12], default=12, help='Tape size in mm (default is 12mm)')
     return parser.parse_args()
 
 
@@ -128,13 +128,16 @@ def main():
 
     bitmaps = []
 
+    labelheight = int((args.t / 3) * (DymoLabeler._MAX_BYTES_PER_LINE / 4)) * 8
+    offset_bytes = {12:0, 9:1, 6:2}[args.t]
+
     if args.qr:
         # create QR object from first string
         code = QRCode(labeltext.pop(0), error="M")
         qr_text = code.text(quiet_zone=1).split()
 
         # create an empty label image
-        labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
+        # labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
         labelwidth = labelheight
         qr_scale = labelheight // len(qr_text)
         qr_offset = (labelheight - len(qr_text) * qr_scale) // 2
@@ -180,7 +183,7 @@ def main():
             fontoffset = min(args.f, 3)
 
         # create an empty label image
-        labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
+        # labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
         lineheight = float(labelheight) / len(labeltext)
         fontsize = int(round(lineheight * FONT_SIZERATIO))
         font = ImageFont.truetype(FONT_FILENAME, fontsize)
@@ -203,13 +206,13 @@ def main():
 
             # write the text into the empty image
             for i, line in enumerate(labeltext):
-                lineposition = int(round(i * lineheight))
+                lineposition = int(round(i * lineheight)) + 0
                 labeldraw.text((fontoffset, lineposition), line, font=font, fill=255)
 
         bitmaps.append(textbitmap)
 
     if args.picture:
-        labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
+        # labelheight = DymoLabeler._MAX_BYTES_PER_LINE * 8
         with Image.open(args.picture) as img:
             if img.height > labelheight:
                 ratio = labelheight / img.height
@@ -274,6 +277,6 @@ def main():
 
         print("Printing label..")
         if args.m is not None:
-            lm.printLabel(labelmatrix, margin=args.m)
+            lm.printLabel(labelmatrix, margin=args.m, offset_bytes=offset_bytes)
         else:
-            lm.printLabel(labelmatrix)
+            lm.printLabel(labelmatrix, offset_bytes=offset_bytes)
